@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 //Connect to the DB
-mongoose.connect('mongodb://admin:admin@ds125262.mlab.com:25262/skills');
+mongoose.connect('');
 mongoose.Promise = global.Promise; // mongoose version of promise is depricated
 
 // setup express app
