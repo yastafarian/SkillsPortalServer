@@ -83,9 +83,6 @@ router.get("/people/skills", function(req, res, next){
 //===End of Retrieve methods======
 
 //====Update methods==============
-
-//TODO: update existing skill for a person => update corrosponding skill
-//TODO: push new skill for a person => update corrosponding skill
 //TODO: delete skill => update corrosponding skill
 router.put("/people/updateSkills/:username", function(req, res, next){
   // create the skill JSON variable
