@@ -4,7 +4,7 @@ const Person = require('../models/person.js');
 const Skill = require('../models/skill.js');
 
 
-//in the case of updating the level
+//Update a certain skill
 function updateSkillCollection(skill, person){
   Skill.findOne({title: skill.title}).then(function(s){
     //copy the people inside the skill document
@@ -21,17 +21,15 @@ function updateSkillCollection(skill, person){
     s.persons = people;
 
     //find the document again the collection to update it witht he new object
-    Person.findOneAndUpdate({title: s.title},
+    Skill.findOneAndUpdate({title: s.title},
                             s,
-                            {new: true, mutli: false}, function(err, person){
+                            {new: true, mutli: false}, function(err, skill){
                               if(err){
-                                  console.log("Something wrong when updating data!");
+                                  console.log(err);
                               }
-                              res.send(s);
                             });
   });
 }
-
 
 
 //==Retrieve methods=======
@@ -75,7 +73,9 @@ router.get("/people/skills", function(req, res, next){
     });
   }
   else {
-    Person.find({skills: {$elemMatch: {title: skill.title, level: skill.level}}}).then(function(people){
+    Person.find(
+      {skills: {$elemMatch: {title: skill.title, level: skill.level}}}).
+      then(function(people){
       res.send(people);
     });
   }
@@ -87,42 +87,58 @@ router.get("/people/skills", function(req, res, next){
 //TODO: update existing skill for a person => update corrosponding skill
 //TODO: push new skill for a person => update corrosponding skill
 //TODO: delete skill => update corrosponding skill
-router.put("/people/addskill/:username", function(req, res, next){
-  var skill = {
+router.put("/people/updateSkills/:username", function(req, res, next){
+  // create the skill JSON variable
+  var toUpdate = {
     title: req.query.title,
     level: req.query.level
   };
+
+  //Find the the person
   Person.findOne({username: req.params.username}).then(function(p){
-    var skills = p.skills.slice();
+    var personSkills = p.skills.slice();
     var index;
-    for (var i = 0; i < skills.length; i++){
-      console.log('searching ' + i);
-      if (skills[i].title == skill.title){
-        console.log('searching ' + i);
+    // Look through the person skills to find if the skill alread exists
+    for (var i = 0; i < personSkills.length; i++){
+      if (personSkills[i].title == toUpdate.title){
+        // Found one; log the index
         index = i;
         break;
       }
     }
+
+    // Based on the index variable, we either push a new skill or update an
+    // an existing one.
+    // index variable can only contain the index of the skill if it exists.
     if (index === undefined){
-      console.log('pushing skill');
-      skills.push(skill);
+      personSkills.push(toUpdate);
+      //create new skill
+      var newSkill = Skill({
+        title: toUpdate.title,
+        persons: [{
+          username: p.username,
+          level: toUpdate.level
+        }]
+      });
+      newSkill.save().then(function(s){
+      });
     }
     else{
-      skills[index] = skill;
-      updateSkillCollection(skill, p);
+      personSkills[index] = toUpdate;
+      updateSkillCollection(toUpdate, p);
     }
-    p.skills = skills;
+    p.skills = personSkills;
 
-    Person.findOneAndUpdate({username: req.params.username},
+    // update the person collection
+    Person.findOneAndUpdate({username: p.username},
                             p,
-                            {new: true, mutli: false}, function(err, person){
+                            {new: true, mutli: false}, function(err, pers){
                               if(err){
-                                  console.log("Something wrong when updating data!");
+                                  //console.log(err);
                               }
-                              res.send(person);
+                              res.send(pers);
                             });
   });
-
 });
 
 
