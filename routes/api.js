@@ -6,9 +6,14 @@ const Skill = require('../models/skill.js');
 
 //Update a certain skill
 function updateSkillCollection(skill, person){
-  Skill.findOne({title: skill.title}).then(function(s){
+  //TODO: if skill doesnt exist create a newone
+  Skill.findOneAndUpdate({title: skill.title},
+                         {$push: {persons: person}},
+                        {upsert: true, new: true}).then(function(s){
     //copy the people inside the skill document
     people = s.persons.slice();
+
+    console.log();
 
     //find the person we want to update within the skill document
     for (var i = 0; i < people.length; i++){
@@ -83,8 +88,8 @@ router.get("/people/skills", function(req, res, next){
 //===End of Retrieve methods======
 
 //====Update methods==============
-//TODO: delete skill => update corrosponding skill
-router.put("/people/updateSkills/:username", function(req, res, next){
+router.put("/people/updateSkill/:username", function(req, res, next){
+
   // create the skill JSON variable
   var toUpdate = {
     title: req.query.title,
@@ -117,14 +122,15 @@ router.put("/people/updateSkills/:username", function(req, res, next){
           level: toUpdate.level
         }]
       });
-      newSkill.save().then(function(s){
-      });
+      //newSkill.save().then(function(s){
+      //});
     }
     else{
       personSkills[index] = toUpdate;
-      updateSkillCollection(toUpdate, p);
+      //updateSkillCollection(toUpdate, p);
     }
     p.skills = personSkills;
+    updateSkillCollection(toUpdate, p);
 
     // update the person collection
     Person.findOneAndUpdate({username: p.username},
@@ -137,7 +143,6 @@ router.put("/people/updateSkills/:username", function(req, res, next){
                             });
   });
 });
-
 
 //===Create methods=========
 
@@ -167,5 +172,51 @@ router.post("/people", function(req, res, next){
   }).catch(next);
 });
 
+//===Delete methods=========
+
+// delete a person and remove said person from the corroponding skill documents
+router.delete("/people/:username", function(req, res, next){
+  Person.findOneAndRemove({username: req.params.username}).then(function(person){
+    // Add individual skills to DB
+    var skills = person.skills.slice();
+
+    for (var i = 0, len = skills.length; i < len; i++){
+      //============
+      var p = {
+        username: person.username,
+        level: skills[i].level
+      };
+
+      Skill.findOneAndUpdate({title: skills[i].title},
+                             {$pull: {persons: p}},
+                             { new: true},
+                             function(err, skill){});
+      //END of forloop
+    }
+    res.send(person);
+  });
+});
+
+// delete one skill
+router.delete("/people/deleteSkill/:username", function(req, res, next){
+  console.log('delete skill');
+  // update the server document
+  Person.findOneAndUpdate({username: req.params.username},
+                         {$pull: {"skills": {"title": req.query.title}}},
+                         { new: true},
+                         function(err, person){
+                           if (err) console.log(err);
+                           if (person) console.log(person);
+                         });
+
+  // update the skill document
+  Skill.findOneAndUpdate({title: req.query.title},
+                         {$pull: {"persons": {"username": req.params.username}}},
+                         { new: true},
+                         function(err, skill){
+                           if (err) console.log(err);
+                           if (skill) res.send(skill);
+                         });
+});
 
 module.exports = router;
