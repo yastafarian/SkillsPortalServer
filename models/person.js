@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const SkillSchema = new Schema({
   title: {
       type: String,
-      required: [true, 'Name field is required'],
+      required: [true, 'Title field is required'],
       lowercase: true,
       trim: true
   },
@@ -23,8 +23,9 @@ const PersonSchema = new Schema({
   },
   username: {
     type: String,
-    required: [true, 'Name field is required'],
+    required: [true, 'username field is required'],
     lowercase: true,
+    unique: true,
     trim: true
   },
   skills: [SkillSchema]

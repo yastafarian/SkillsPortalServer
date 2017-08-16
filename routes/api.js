@@ -1,8 +1,42 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('express-jwt');
+
 const Person = require('../models/person.js');
 const Skill = require('../models/skill.js');
 
+const ctrlPeople = require('../controllers/people');
+const ctrlAuth = require('../controllers/authentication');
+const ctrlProfile = require('../controllers/profile');
+const ctrlSkills = require('../controllers/skills');
+
+
+
+var auth = jwt({
+  secret: 'MY_SECRET',
+  userProperty: 'payload'
+});
+
+//profile routes
+router.get('/profile', auth, ctrlProfile.profileRead);
+
+//Authentication routes
+router.post('/register', ctrlAuth.register);
+router.post('/login', ctrlAuth.login);
+
+/*
+//Skills routes
+router.post('/skills', ctrlSkills.add);
+router.put('/skills', ctrlSkills.update);
+router.get('/skills', ctrlSkills.getAll);
+router.get('/skills/:title', ctrlSkills.get);
+
+//people routes
+router.post('/people', ctrlPeople.add);
+router.put('/people', ctrlPeople.update);
+router.get('/people/skill/:title', ctrPeople.getAllBySkill);
+router.get('/people/:username', ctrlSkills.getByUsername);
+*/
 
 //Update a certain skill
 function updateSkillCollection(skill, person){
@@ -12,8 +46,6 @@ function updateSkillCollection(skill, person){
                         {upsert: true, new: true}).then(function(s){
     //copy the people inside the skill document
     people = s.persons.slice();
-
-    console.log();
 
     //find the person we want to update within the skill document
     for (var i = 0; i < people.length; i++){
@@ -37,9 +69,11 @@ function updateSkillCollection(skill, person){
 }
 
 
+
 //==Retrieve methods=======
 // all skills
 router.get("/skills", function(req, res, next){
+  console.log('GET /skills');
   Skill.find({}).then(function(skills){
     res.send(skills);
   });
@@ -47,6 +81,7 @@ router.get("/skills", function(req, res, next){
 
 // specific skill
 router.get("/skills/:title", function(req, res, next){
+  console.log('GET /skills/'+req.params.title);
   Skill.find({title: req.params.title}).then(function(skills){
     res.send(skills);
   });
@@ -54,6 +89,7 @@ router.get("/skills/:title", function(req, res, next){
 
 // all people
 router.get("/people", function(req, res, next){
+  console.log('GET /people');
   Person.find({}).then(function(people){
     res.send(people);
   });
@@ -61,6 +97,7 @@ router.get("/people", function(req, res, next){
 
 // specific person
 router.get("/people/users/:username", function(req, res, next){
+  console.log('GET /people/users/' + req.params.username);
   Person.find({username: req.params.username}).then(function(people){
     res.send(people);
   });
@@ -72,6 +109,7 @@ router.get("/people/skills", function(req, res, next){
     title: req.query.title,
     level: req.query.level
   };
+  console.log('GET /people/skills' + skill.title);
   if (skill.level === undefined){
     Person.find({skills: {$elemMatch: {title: skill.title}}}).then(function(people){
       res.send(people);
@@ -88,8 +126,8 @@ router.get("/people/skills", function(req, res, next){
 //===End of Retrieve methods======
 
 //====Update methods==============
-router.put("/people/updateSkill/:username", function(req, res, next){
-
+router.put("/people/users/:username", function(req, res, next){
+  console.log('PUT /people/users' + req.params.username);
   // create the skill JSON variable
   var toUpdate = {
     title: req.query.title,
@@ -149,9 +187,9 @@ router.put("/people/updateSkill/:username", function(req, res, next){
 // add new Person
 router.post("/people", function(req, res, next){
   //TODO: verify & register
+  console.log('POST  /people');
   Person.create(req.body).then(function(person){
-    console.log('adding ' + person.username + ' to DB');
-
+    //console.log('adding ' + person.username + ' to DB');
     // Add individual skills to DB
     var skills = person.skills.slice();
 
@@ -163,7 +201,7 @@ router.post("/people", function(req, res, next){
       };
 
       Skill.findOneAndUpdate({title: skills[i].title},
-                             {$push: {persons: p}},
+                             {$push: {people: p.username}},
                              { upsert : true, new: true},
                              function(err, skill){});
       //END of forloop
