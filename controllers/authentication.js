@@ -1,28 +1,44 @@
 const passport = require('passport');
 const User = require('../models/user.js');
+const Person = require('../models/person.js');
 
 const sendJSONresponse = function(res, status, content) {
   res.status(status);
   res.json(content);
 };
 
-const createUser = function(req, res) {
-  var user = new User();
 
-  user.name = req.body.name;
-  user.email = req.body.email;
-  user.username = req.body.username;
 
-  user.setPassword(req.body.password);
+const createProfile = function(user){
+  var profile = new Person();
+  profile.name = user.name;
+  profile.username = user.username;
 
-  user.save(function(err) {
-    var token;
-    token = user.generateJwt();
-    res.status(200);
-    res.json({
-      "token" : token
-    });
+  profile.save(function(err) {
+    if (!err){
+      console.log('created new profile');
+    }
   });
+};
+
+const createUser = function(req, res) {
+    var user = new User();
+
+    user.name = req.body.name;
+    user.email = req.body.email;
+    user.username = req.body.username;
+
+    user.setPassword(req.body.password);
+
+    user.save(function(err) {
+        var token;
+        token = user.generateJwt();
+        createProfile(user);
+        res.status(200);
+        res.json({
+            "token" : token
+        });
+    });
 };
 
 /*
@@ -69,9 +85,9 @@ module.exports.register = function(req, res) {
   };
 
   module.exports.login = function(req, res) {
-
+    console.log('POST /login');
     if(!req.body.password || !req.body.username) {
-      sendJSONresponse(res, 400, {
+      sendJSONresponse(res, 200, {
         "message": "All fields required"
       });
       return;
@@ -90,13 +106,14 @@ module.exports.register = function(req, res) {
       // If a user is found
       if(user){
         token = user.generateJwt();
+        console.log(token);
         res.status(200);
         res.json({
           "token" : token
         });
       } else {
         // If user is not found
-        res.status(401).json(info);
+        res.status(200).json(info);
       }
     })(req, res);
 
