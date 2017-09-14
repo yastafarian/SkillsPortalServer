@@ -7,12 +7,17 @@ const Skill = require('../models/skill');
 
 //Update a certain skill
 function updateSkillCollection(skill, person){
-    //TODO: if skill doesnt exist create a newone
+    var updatedPerson = {
+        username: person.username,
+        level: skill.level
+    }
+
+    //TODO: fix issue with adding the same user again
     Skill.findOneAndUpdate({title: skill.title},
-        {$push: {persons: person}},
+        {$push: {people: updatedPerson}},
         {upsert: true, new: true}).then(function(s){
         //copy the people inside the skill document
-        people = s.persons.slice();
+        people = s.people.slice();
 
         //find the person we want to update within the skill document
         for (var i = 0; i < people.length; i++){
@@ -22,7 +27,7 @@ function updateSkillCollection(skill, person){
             }
         }
         // update the skill callback object
-        s.persons = people;
+        s.people = people;
 
         //find the document again the collection to update it witht he new object
         Skill.findOneAndUpdate({title: s.title},
@@ -75,9 +80,10 @@ module.exports.getBySkill = function(req, res, next){
 module.exports.updateSkills =  function(req, res, next){
     console.log('PUT /people/update_skills/' + req.params.username);
     // create the skill JSON variable
+    var request = req.body;
     var toUpdate = {
-        title: req.query.title,
-        level: req.query.level
+        title: request.title,
+        level: request.level
     };
 
     //Find the the person
@@ -85,9 +91,11 @@ module.exports.updateSkills =  function(req, res, next){
         var personSkills = p.skills.slice();
         var index;
         // Look through the person skills to find if the skill already exists
+        console.log('Looking through ' + p.username + ' skills for ' + toUpdate.title);
         for (var i = 0; i < personSkills.length; i++){
             if (personSkills[i].title == toUpdate.title){
                 // Found one; log the index
+                console.log('found ' + toUpdate.title + ' at index ' + i);
                 index = i;
                 break;
             }
@@ -96,24 +104,17 @@ module.exports.updateSkills =  function(req, res, next){
         // Based on the index variable, we either push a new skill or update an
         // an existing one.
         // index variable can only contain the index of the skill if it exists.
+        console.log('index = ' + index);
         if (index === undefined){
+            console.log(p.username + ' does not have ' + toUpdate.title + ' skill');
             personSkills.push(toUpdate);
-            //create new skill
-            var newSkill = Skill({
-                title: toUpdate.title,
-                persons: [{
-                    username: p.username,
-                    level: toUpdate.level
-                }]
-            });
-            //newSkill.save().then(function(s){
-            //});
         }
         else{
             personSkills[index] = toUpdate;
-            //updateSkillCollection(toUpdate, p);
         }
         p.skills = personSkills;
+        console.log(personSkills);
+        console.log(p.skills);
         updateSkillCollection(toUpdate, p);
 
         // update the person collection
