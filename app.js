@@ -4,7 +4,7 @@ const mongoose = require('mongoose'); //To access our MongoDb
 const passport = require('passport'); // To login users
 
 //Connect to the DB
-mongoose.connect('mongodb://admin:admin@ds125262.mlab.com:25262/skills');
+mongoose.connect('');
 mongoose.Promise = global.Promise; // mongoose version of promise is depricated
 
 // setup express app
