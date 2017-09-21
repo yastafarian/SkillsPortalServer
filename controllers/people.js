@@ -1,5 +1,3 @@
-const mongoose = require('mongoose');
-const User = require('../models/user');
 const Person = require('../models/person');
 const Skill = require('../models/skill');
 
@@ -7,14 +5,8 @@ const Skill = require('../models/skill');
 
 //Update a certain skill
 function updateSkillCollection(skill, person){
-    var updatedPerson = {
-        username: person.username,
-        level: skill.level
-    }
 
-    //TODO: fix issue with adding the same user again
     Skill.findOneAndUpdate({title: skill.title},
-        {$push: {people: updatedPerson}},
         {upsert: true, new: true}).then(function(s){
         //copy the people inside the skill document
         people = s.people.slice();
@@ -93,7 +85,7 @@ module.exports.updateSkills =  function(req, res, next){
         // Look through the person skills to find if the skill already exists
         console.log('Looking through ' + p.username + ' skills for ' + toUpdate.title);
         for (var i = 0; i < personSkills.length; i++){
-            if (personSkills[i].title == toUpdate.title){
+            if (personSkills[i].title === toUpdate.title){
                 // Found one; log the index
                 console.log('found ' + toUpdate.title + ' at index ' + i);
                 index = i;
