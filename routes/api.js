@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('express-jwt');
 
-const Person = require('../models/person.js');
-const Skill = require('../models/skill.js');
 
 const ctrlPeople = require('../controllers/people');
 const ctrlAuth = require('../controllers/authentication');
@@ -19,7 +17,9 @@ var auth = jwt({
 
 //profile routes
 router.get('/profile', auth, ctrlProfile.profileRead);
-//router.put('/profile/add'
+router.delete("/profile/delete_skill/:skill", auth, ctrlProfile.deleteSkill);
+router.put("/profile/add_skill", auth, ctrlProfile.addSkill);
+router.put("/profile/edit_skill", auth, ctrlProfile.editSkill);
 
 //Authentication routes
 router.post('/register', ctrlAuth.register);
@@ -40,6 +40,6 @@ router.put("/people/update_skills/:username", ctrlPeople.updateSkills);
 
 router.post("/people", ctrlPeople.add);
 router.delete("/people/:username", auth, ctrlPeople.remove);
-router.delete("/people/deleteSkill/:username", auth, ctrlPeople.deleteSkill);
+
 
 module.exports = router;

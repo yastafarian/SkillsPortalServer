@@ -1,5 +1,6 @@
 const Person = require('../models/person');
 const Skill = require('../models/skill');
+const User = require('../models/user');
 
 //Helper functions
 
@@ -114,7 +115,7 @@ module.exports.updateSkills =  function(req, res, next){
             p,
             {new: true, mutli: false}, function(err, pers){
                 if(err){
-                    //console.log(err);
+                    console.log(err);
                 }
                 res.send(pers);
             });
@@ -168,25 +169,4 @@ module.exports.add =  function(req, res, next){
         }
         res.send(person);
     }).catch(next);
-};
-
-module.exports.deleteSkill = function(req, res, next){
-    console.log('delete skill');
-    // update the server document
-    Person.findOneAndUpdate({username: req.params.username},
-        {$pull: {"skills": {"title": req.query.title}}},
-        { new: true},
-        function(err, person){
-            if (err) console.log(err);
-            if (person) console.log(person);
-        });
-
-    // update the skill document
-    Skill.findOneAndUpdate({title: req.query.title},
-        {$pull: {"persons": {"username": req.params.username}}},
-        { new: true},
-        function(err, skill){
-            if (err) console.log(err);
-            if (skill) res.send(skill);
-        });
 };
