@@ -1,11 +1,12 @@
 const express = require('express'); //middleware for building REST API
-const bodyParser = require('body-parser'); //to pasre JSON requests
+const bodyParser = require('body-parser'); //to parse JSON requests
 const mongoose = require('mongoose'); //To access our MongoDb
 const passport = require('passport'); // To login users
+require('dotenv').config(); //For environment variables
 
 //Connect to the DB
-mongoose.connect('mongodb://admin:admin@ds125262.mlab.com:25262/skills');
-mongoose.Promise = global.Promise; // mongoose version of promise is depricated
+mongoose.connect(process.env.DB_URL);
+mongoose.Promise = global.Promise;
 
 // setup express app
 const app = express();

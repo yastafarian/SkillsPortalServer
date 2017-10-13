@@ -94,7 +94,7 @@ module.exports.register = function(req, res) {
       return;
     }
 
-    // tell passport to use local startegy
+    // tell passport to use local strategy
     passport.authenticate('local', function(err, user, info){
       var token;
 

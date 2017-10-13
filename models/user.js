@@ -59,7 +59,7 @@ UserSchema.methods.generateJwt = function() {
     username: this.username,
     name: this.name,
     exp: parseInt(expiry.getTime() / 1000),
-  }, "MY_SECRET"); // TODO: Put the SECRET in environment variable
+  }, process.env.JWT_SECRET);
 };
 
 const User = mongoose.model('user', UserSchema);
