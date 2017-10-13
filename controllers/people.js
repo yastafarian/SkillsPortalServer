@@ -1,6 +1,5 @@
 const Person = require('../models/person');
 const Skill = require('../models/skill');
-const User = require('../models/user');
 
 //Helper functions
 
@@ -122,7 +121,7 @@ module.exports.updateSkills =  function(req, res, next){
     });
 };
 
-// For future needs
+// For future needs, if we want to remove a user.
 module.exports.remove = function(req, res, next){
     console.log('DELETE /people/' + req.params.username);
     Person.findOneAndRemove({username: req.params.username}).then(function(person){
